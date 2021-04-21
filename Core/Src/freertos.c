@@ -48,12 +48,19 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+/* Definitions for heartBeatTask */
+osThreadId_t heartBeatTaskHandle;
+const osThreadAttr_t heartBeatTask_attributes = {
+  .name = "heartBeatTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for ioTask */
+osThreadId_t ioTaskHandle;
+const osThreadAttr_t ioTask_attributes = {
+  .name = "ioTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,7 +68,8 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void StartHeartBeatTask(void *argument);
+void StartIOTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -92,8 +100,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of heartBeatTask */
+  heartBeatTaskHandle = osThreadNew(StartHeartBeatTask, NULL, &heartBeatTask_attributes);
+
+  /* creation of ioTask */
+  ioTaskHandle = osThreadNew(StartIOTask, NULL, &ioTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -105,22 +116,40 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartHeartBeatTask */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the heartBeatTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_StartHeartBeatTask */
+void StartHeartBeatTask(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN StartHeartBeatTask */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END StartHeartBeatTask */
+}
+
+/* USER CODE BEGIN Header_StartIOTask */
+/**
+* @brief Function implementing the ioTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartIOTask */
+void StartIOTask(void *argument)
+{
+  /* USER CODE BEGIN StartIOTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartIOTask */
 }
 
 /* Private application code --------------------------------------------------*/
