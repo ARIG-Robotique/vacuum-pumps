@@ -26,7 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "adc.h"
+#include "itm_log.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,7 +81,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-
+  LOG_INFO("freertos: Init FreeRTOS");
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -126,11 +127,33 @@ void MX_FREERTOS_Init(void) {
 void StartHeartBeatTask(void *argument)
 {
   /* USER CODE BEGIN StartHeartBeatTask */
+  LOG_INFO("heartBeatTask: Start");
+
+  HAL_GPIO_WritePin(PRES_1_GPIO_Port, PRES_1_Pin, GPIO_PIN_SET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_2_GPIO_Port, PRES_2_Pin, GPIO_PIN_SET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_3_GPIO_Port, PRES_3_Pin, GPIO_PIN_SET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_4_GPIO_Port, PRES_4_Pin, GPIO_PIN_SET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_1_GPIO_Port, PRES_1_Pin, GPIO_PIN_RESET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_2_GPIO_Port, PRES_2_Pin, GPIO_PIN_RESET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_3_GPIO_Port, PRES_3_Pin, GPIO_PIN_RESET);
+  osDelay(100);
+  HAL_GPIO_WritePin(PRES_4_GPIO_Port, PRES_4_Pin, GPIO_PIN_RESET);
+  osDelay(100);
+
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
+  while(true) {
+    HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
+    osDelay(1000);
   }
+#pragma clang diagnostic pop
   /* USER CODE END StartHeartBeatTask */
 }
 
@@ -144,11 +167,43 @@ void StartHeartBeatTask(void *argument)
 void StartIOTask(void *argument)
 {
   /* USER CODE BEGIN StartIOTask */
+  LOG_INFO("ioTask: Start");
+
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
+  while(true) {
+    LOG_INFO("ioTask: Read TOR");
+
+    LOG_INFO("ioTask: Read vacuostat 1");
+    adcSelectVacuostat1();
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 1000);
+    pompe1.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+    HAL_ADC_Stop(&hadc1);
+
+    LOG_INFO("ioTask: Read vacuostat 2");
+    adcSelectVacuostat2();
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 1000);
+    pompe2.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+    HAL_ADC_Stop(&hadc1);
+
+    LOG_INFO("ioTask: Read vacuostat 3");
+    adcSelectVacuostat3();
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 1000);
+    pompe3.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+    HAL_ADC_Stop(&hadc1);
+
+    LOG_INFO("ioTask: Read vacuostat 4");
+    adcSelectVacuostat4();
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 1000);
+    pompe4.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+    HAL_ADC_Stop(&hadc1);
   }
+#pragma clang diagnostic pop
   /* USER CODE END StartIOTask */
 }
 

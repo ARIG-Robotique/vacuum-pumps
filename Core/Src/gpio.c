@@ -93,7 +93,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
                            PBPin */
-  GPIO_InitStruct.Pin = B1_TEST_Pin|ADD_2_Pin|ADD_1_Pin|TOR_1_Pin
+  GPIO_InitStruct.Pin = B1_TEST_Pin|I2C_ADD_2_Pin|I2C_ADD_1_Pin|TOR_1_Pin
                           |TOR_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

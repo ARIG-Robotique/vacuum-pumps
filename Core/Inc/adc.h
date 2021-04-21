@@ -40,7 +40,10 @@ extern ADC_HandleTypeDef hadc1;
 void MX_ADC1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void adcSelectVacuostat1(void);
+void adcSelectVacuostat2(void);
+void adcSelectVacuostat3(void);
+void adcSelectVacuostat4(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

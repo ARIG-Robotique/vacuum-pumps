@@ -32,11 +32,29 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef enum
+{
+    POMPE_DISABLED,
+    POMPE_ENABLED,
+    POMPE_AUTO
+} Pompe_Mode;
+
+typedef struct {
+    double vacuum;
+    bool tor;
+    bool presence;
+    Pompe_Mode mode;
+} Pompe;
+
+extern Pompe pompe1;
+extern Pompe pompe2;
+extern Pompe pompe3;
+extern Pompe pompe4;
 
 /* USER CODE END ET */
 
@@ -107,16 +125,22 @@ void Error_Handler(void);
 #define PRES_4_GPIO_Port GPIOA
 #define HEART_BEAT_Pin GPIO_PIN_12
 #define HEART_BEAT_GPIO_Port GPIOA
-#define ADD_2_Pin GPIO_PIN_4
-#define ADD_2_GPIO_Port GPIOB
-#define ADD_1_Pin GPIO_PIN_5
-#define ADD_1_GPIO_Port GPIOB
+#define I2C_ADD_2_Pin GPIO_PIN_4
+#define I2C_ADD_2_GPIO_Port GPIOB
+#define I2C_ADD_1_Pin GPIO_PIN_5
+#define I2C_ADD_1_GPIO_Port GPIOB
 #define TOR_1_Pin GPIO_PIN_8
 #define TOR_1_GPIO_Port GPIOB
 #define TOR_2_Pin GPIO_PIN_9
 #define TOR_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
+// Résolution des convertisseurs ADC de la STM32F103C8
+#define ADC_RESOLUTION 4096.0
+
+// Commande I2C
+#define I2C_CMD_VERSION 'v'
+#define I2C_CMD_GET_STATUS 's'
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
