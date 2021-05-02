@@ -47,12 +47,12 @@ typedef enum
 
 typedef struct {
     // Read
-    uint32_t vacuum;
+    uint16_t vacuum;
     bool tor;
     bool presence;
 
     // Write
-    uint32_t vacuumSeuil;
+    uint16_t vacuumSeuil;
     Pompe_Mode mode;
 } Pompe;
 

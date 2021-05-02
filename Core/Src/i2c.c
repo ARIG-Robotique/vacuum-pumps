@@ -158,20 +158,20 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       uint8_t txBuffer[8];
 
       // Pompe 1
-      txBuffer[0] = (pompe1.vacuum >> 8) & 0xFF;
-      txBuffer[1] = (pompe1.vacuum & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+      txBuffer[0] = ((pompe1.vacuum >> 8) & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+      txBuffer[1] = (pompe1.vacuum & 0xFF);
 
       // Pompe 2
-      txBuffer[2] = (pompe2.vacuum >> 8) & 0xFF;
-      txBuffer[3] = (pompe2.vacuum & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+      txBuffer[2] = ((pompe2.vacuum >> 8) & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+      txBuffer[3] = (pompe2.vacuum & 0xFF);
 
       // Pompe 3
-      txBuffer[4] = (pompe3.vacuum >> 8) & 0xFF;
-      txBuffer[5] = (pompe3.vacuum & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+      txBuffer[4] = ((pompe3.vacuum >> 8) & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+      txBuffer[5] = (pompe3.vacuum & 0xFF);
 
       // Pompe 4
-      txBuffer[6] = (pompe4.vacuum >> 8) & 0xFF;
-      txBuffer[7] = (pompe4.vacuum & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
+      txBuffer[6] = ((pompe4.vacuum >> 8) & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
+      txBuffer[7] = (pompe4.vacuum & 0xFF) ;
 
 //      for (int i = 0 ; i < sizeof(txBuffer); i++) {
 //        sprintf(buf, "i2c: idx %d -> 0x%02X", i, txBuffer[i]);
@@ -184,8 +184,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       uint8_t txBuffer[2];
 
       // Pompe 1
-      txBuffer[0] = (pompe1.vacuum >> 8) & 0xFF;
-      txBuffer[1] = (pompe1.vacuum & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+      txBuffer[0] = ((pompe1.vacuum >> 8) & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+      txBuffer[1] = (pompe1.vacuum & 0xFF);
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
@@ -194,8 +194,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       uint8_t txBuffer[2];
 
       // Pompe 2
-      txBuffer[0] = (pompe2.vacuum >> 8) & 0xFF;
-      txBuffer[1] = (pompe2.vacuum & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+      txBuffer[0] = ((pompe2.vacuum >> 8) & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+      txBuffer[1] = (pompe2.vacuum & 0xFF);
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
@@ -204,8 +204,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       uint8_t txBuffer[2];
 
       // Pompe 3
-      txBuffer[0] = (pompe3.vacuum >> 8) & 0xFF;
-      txBuffer[1] = (pompe3.vacuum & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+      txBuffer[0] = ((pompe3.vacuum >> 8) & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+      txBuffer[1] = (pompe3.vacuum & 0xFF);
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
@@ -214,8 +214,8 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       uint8_t txBuffer[2];
 
       // Pompe 4
-      txBuffer[0] = (pompe4.vacuum >> 8) & 0xFF;
-      txBuffer[1] = (pompe4.vacuum & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
+      txBuffer[0] = ((pompe4.vacuum >> 8) & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
+      txBuffer[1] = (pompe4.vacuum & 0xFF);
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
