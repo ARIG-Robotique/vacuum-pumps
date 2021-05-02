@@ -96,6 +96,16 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  LOG_INFO("main: Init default value for pumps");
+  pompe1.mode = POMPE_DISABLED;
+  pompe1.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe2.mode = POMPE_DISABLED;
+  pompe2.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe3.mode = POMPE_DISABLED;
+  pompe3.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe4.mode = POMPE_DISABLED;
+  pompe4.vacuumSeuil = ADC_RESOLUTION / 2;
+
   LOG_INFO("main: Start I²C listener");
   HAL_I2C_EnableListen_IT(&hi2c1);
   /* USER CODE END 2 */
