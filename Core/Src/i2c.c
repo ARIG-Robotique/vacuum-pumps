@@ -148,19 +148,77 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       LOG_WARN("i2c: Address Callback, no data needed in this firmware");
     }
   } else {
-    if (cmd == I2C_CMD_VERSION) {
+    if (cmd == I2C_CMD_GET_VERSION) {
       sprintf(buf, "i2c: Address Callback send version %s", FIRMWARE_VERSION);
       LOG_INFO("i2c: Address Callback send version");
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION), I2C_NEXT_FRAME);
-    } else if (cmd == I2C_CMD_GET_STATUS) {
-      LOG_INFO("i2c: Address Callback send pump status");
-      uint8_t txBuffer[2];
+
+    } else if (cmd == I2C_CMD_GET_ALL_PUMP_VALUES) {
+      LOG_INFO("i2c: Address Callback send all pump status");
+      uint8_t txBuffer[8];
+
+      // Pompe 1
+      txBuffer[0] = (pompe1.vacuum >> 8) & 0xFF;
+      txBuffer[1] = (pompe1.vacuum & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+
+      // Pompe 2
+      txBuffer[2] = (pompe2.vacuum >> 8) & 0xFF;
+      txBuffer[3] = (pompe2.vacuum & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+
+      // Pompe 3
+      txBuffer[4] = (pompe3.vacuum >> 8) & 0xFF;
+      txBuffer[5] = (pompe3.vacuum & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+
+      // Pompe 4
+      txBuffer[6] = (pompe4.vacuum >> 8) & 0xFF;
+      txBuffer[7] = (pompe4.vacuum & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
 
 //      for (int i = 0 ; i < sizeof(txBuffer); i++) {
 //        sprintf(buf, "i2c: idx %d -> 0x%02X", i, txBuffer[i]);
 //        LOG_DEBUG(buf);
 //      }
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
+
+    } else if (cmd == I2C_CMD_GET_PUMP1_VALUES) {
+      LOG_INFO("i2c: Address Callback send pump 1 status");
+      uint8_t txBuffer[2];
+
+      // Pompe 1
+      txBuffer[0] = (pompe1.vacuum >> 8) & 0xFF;
+      txBuffer[1] = (pompe1.vacuum & 0xFF) + (pompe1.presence << 7) + (pompe1.tor << 6);
+
+      HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
+
+    } else if (cmd == I2C_CMD_GET_PUMP2_VALUES) {
+      LOG_INFO("i2c: Address Callback send pump 2 status");
+      uint8_t txBuffer[2];
+
+      // Pompe 2
+      txBuffer[0] = (pompe2.vacuum >> 8) & 0xFF;
+      txBuffer[1] = (pompe2.vacuum & 0xFF) + (pompe2.presence << 7) + (pompe2.tor << 6);
+
+      HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
+
+    } else if (cmd == I2C_CMD_GET_PUMP3_VALUES) {
+      LOG_INFO("i2c: Address Callback send pump 3 status");
+      uint8_t txBuffer[2];
+
+      // Pompe 3
+      txBuffer[0] = (pompe3.vacuum >> 8) & 0xFF;
+      txBuffer[1] = (pompe3.vacuum & 0xFF) + (pompe3.presence << 7) + (pompe3.tor << 6);
+
+      HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
+
+    } else if (cmd == I2C_CMD_GET_PUMP4_VALUES) {
+      LOG_INFO("i2c: Address Callback send pump 4 status");
+      uint8_t txBuffer[2];
+
+      // Pompe 4
+      txBuffer[0] = (pompe4.vacuum >> 8) & 0xFF;
+      txBuffer[1] = (pompe4.vacuum & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
+
+      HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
+
     } else {
       LOG_WARN("i2c: Address Callback, unknown command");
     }

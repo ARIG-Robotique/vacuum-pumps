@@ -56,10 +56,17 @@ const osThreadAttr_t heartBeatTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for ioTask */
-osThreadId_t ioTaskHandle;
-const osThreadAttr_t ioTask_attributes = {
-  .name = "ioTask",
+/* Definitions for readPumpTask */
+osThreadId_t readPumpTaskHandle;
+const osThreadAttr_t readPumpTask_attributes = {
+  .name = "readPumpTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for writePumpTask */
+osThreadId_t writePumpTaskHandle;
+const osThreadAttr_t writePumpTask_attributes = {
+  .name = "writePumpTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
@@ -70,7 +77,8 @@ const osThreadAttr_t ioTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartHeartBeatTask(void *argument);
-void StartIOTask(void *argument);
+void StartReadPumpTask(void *argument);
+void StartWritePumpTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -104,8 +112,11 @@ void MX_FREERTOS_Init(void) {
   /* creation of heartBeatTask */
   heartBeatTaskHandle = osThreadNew(StartHeartBeatTask, NULL, &heartBeatTask_attributes);
 
-  /* creation of ioTask */
-  ioTaskHandle = osThreadNew(StartIOTask, NULL, &ioTask_attributes);
+  /* creation of readPumpTask */
+  readPumpTaskHandle = osThreadNew(StartReadPumpTask, NULL, &readPumpTask_attributes);
+
+  /* creation of writePumpTask */
+  writePumpTaskHandle = osThreadNew(StartWritePumpTask, NULL, &writePumpTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -157,54 +168,92 @@ void StartHeartBeatTask(void *argument)
   /* USER CODE END StartHeartBeatTask */
 }
 
-/* USER CODE BEGIN Header_StartIOTask */
+/* USER CODE BEGIN Header_StartReadPumpTask */
 /**
-* @brief Function implementing the ioTask thread.
+* @brief Function implementing the readPumpTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartIOTask */
-void StartIOTask(void *argument)
+/* USER CODE END Header_StartReadPumpTask */
+void StartReadPumpTask(void *argument)
 {
-  /* USER CODE BEGIN StartIOTask */
+  /* USER CODE BEGIN StartReadPumpTask */
   LOG_INFO("ioTask: Start");
 
   /* Infinite loop */
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
   while(true) {
-    LOG_INFO("ioTask: Read TOR");
+    if (pompe1.mode != POMPE_DISABLED) {
+      LOG_INFO("ioTask: Read TOR 1");
+      pompe1.tor = HAL_GPIO_ReadPin(TOR_1_GPIO_Port, TOR_1_Pin) == GPIO_PIN_SET;
 
-    LOG_INFO("ioTask: Read vacuostat 1");
-    adcSelectVacuostat1();
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, 1000);
-    pompe1.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
-    HAL_ADC_Stop(&hadc1);
+      LOG_INFO("ioTask: Read Vacuostat 1");
+      adcSelectVacuostat1();
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 1000);
+      pompe1.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+      HAL_ADC_Stop(&hadc1);
+    }
 
-    LOG_INFO("ioTask: Read vacuostat 2");
-    adcSelectVacuostat2();
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, 1000);
-    pompe2.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
-    HAL_ADC_Stop(&hadc1);
+    if (pompe2.mode != POMPE_DISABLED) {
+      LOG_INFO("ioTask: Read TOR 2");
+      pompe2.tor = HAL_GPIO_ReadPin(TOR_2_GPIO_Port, TOR_2_Pin) == GPIO_PIN_SET;
 
-    LOG_INFO("ioTask: Read vacuostat 3");
-    adcSelectVacuostat3();
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, 1000);
-    pompe3.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
-    HAL_ADC_Stop(&hadc1);
+      LOG_INFO("ioTask: Read Vacuostat 2");
+      adcSelectVacuostat2();
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 1000);
+      pompe2.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+      HAL_ADC_Stop(&hadc1);
+    }
 
-    LOG_INFO("ioTask: Read vacuostat 4");
-    adcSelectVacuostat4();
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1, 1000);
-    pompe4.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
-    HAL_ADC_Stop(&hadc1);
+    if (pompe3.mode != POMPE_DISABLED) {
+      LOG_INFO("ioTask: Read TOR3");
+      pompe3.tor = HAL_GPIO_ReadPin(TOR_3_GPIO_Port, TOR_3_Pin) == GPIO_PIN_SET;
+
+      LOG_INFO("ioTask: Read Vacuostat 3");
+      adcSelectVacuostat3();
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 1000);
+      pompe3.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+      HAL_ADC_Stop(&hadc1);
+    }
+
+    if (pompe4.mode != POMPE_DISABLED) {
+      LOG_INFO("ioTask: Read TOR4");
+      pompe4.tor = HAL_GPIO_ReadPin(TOR_4_GPIO_Port, TOR_4_Pin) == GPIO_PIN_SET;
+
+      LOG_INFO("ioTask: Read Vacuostat 4");
+      adcSelectVacuostat4();
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 1000);
+      pompe4.vacuum = HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION;
+      HAL_ADC_Stop(&hadc1);
+    }
+
+    osDelay(500);
   }
 #pragma clang diagnostic pop
-  /* USER CODE END StartIOTask */
+  /* USER CODE END StartReadPumpTask */
+}
+
+/* USER CODE BEGIN Header_StartWritePumpTask */
+/**
+* @brief Function implementing the writePumpTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartWritePumpTask */
+void StartWritePumpTask(void *argument)
+{
+  /* USER CODE BEGIN StartWritePumpTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartWritePumpTask */
 }
 
 /* Private application code --------------------------------------------------*/
