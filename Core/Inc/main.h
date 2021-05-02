@@ -39,15 +39,20 @@ extern "C" {
 /* USER CODE BEGIN ET */
 typedef enum
 {
-    POMPE_DISABLED,
-    POMPE_ENABLED,
-    POMPE_AUTO
+    POMPE_DISABLED=3,
+    POMPE_ON=1,
+    POMPE_OFF=0,
+    POMPE_AUTO=2
 } Pompe_Mode;
 
 typedef struct {
-    double vacuum;
+    // Read
+    uint32_t vacuum;
     bool tor;
     bool presence;
+
+    // Write
+    uint32_t vacuumSeuil;
     Pompe_Mode mode;
 } Pompe;
 
