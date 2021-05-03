@@ -49,36 +49,45 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for heartBeatTask */
-osThreadId_t heartBeatTaskHandle;
-const osThreadAttr_t heartBeatTask_attributes = {
-  .name = "heartBeatTask",
-  .stack_size = 128 * 4,
+/* Definitions for refreshStateTas */
+osThreadId_t refreshStateTasHandle;
+const osThreadAttr_t refreshStateTas_attributes = {
+  .name = "refreshStateTas",
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for readPumpTask */
-osThreadId_t readPumpTaskHandle;
-const osThreadAttr_t readPumpTask_attributes = {
-  .name = "readPumpTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
-/* Definitions for writePumpTask */
-osThreadId_t writePumpTaskHandle;
-const osThreadAttr_t writePumpTask_attributes = {
-  .name = "writePumpTask",
+/* Definitions for managePumpTask */
+osThreadId_t managePumpTaskHandle;
+const osThreadAttr_t managePumpTask_attributes = {
+  .name = "managePumpTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for heartBeatTimer */
+osTimerId_t heartBeatTimerHandle;
+const osTimerAttr_t heartBeatTimer_attributes = {
+  .name = "heartBeatTimer"
+};
+/* Definitions for ledIhmTimer */
+osTimerId_t ledIhmTimerHandle;
+const osTimerAttr_t ledIhmTimer_attributes = {
+  .name = "ledIhmTimer"
 };
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin);
+void refreshPumpState(Pompe *pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void));
+void managePump(Pompe *pompe,
+                GPIO_TypeDef *stdbyGpioPort, uint16_t stdbyGpioPin,
+                GPIO_TypeDef *pumpGpioPort, uint16_t pumpGpioPin,
+                GPIO_TypeDef *evGpioPort, uint16_t evGpioPin);
 /* USER CODE END FunctionPrototypes */
 
-void StartHeartBeatTask(void *argument);
-void StartReadPumpTask(void *argument);
-void StartWritePumpTask(void *argument);
+void StartRefreshStateTask(void *argument);
+void StartManagePumpTask(void *argument);
+void heartBeatCallback(void *argument);
+void ledIhmCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -100,6 +109,13 @@ void MX_FREERTOS_Init(void) {
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
 
+  /* Create the timer(s) */
+  /* creation of heartBeatTimer */
+  heartBeatTimerHandle = osTimerNew(heartBeatCallback, osTimerPeriodic, NULL, &heartBeatTimer_attributes);
+
+  /* creation of ledIhmTimer */
+  ledIhmTimerHandle = osTimerNew(ledIhmCallback, osTimerPeriodic, NULL, &ledIhmTimer_attributes);
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
@@ -109,14 +125,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of heartBeatTask */
-  heartBeatTaskHandle = osThreadNew(StartHeartBeatTask, NULL, &heartBeatTask_attributes);
+  /* creation of refreshStateTas */
+  refreshStateTasHandle = osThreadNew(StartRefreshStateTask, NULL, &refreshStateTas_attributes);
 
-  /* creation of readPumpTask */
-  readPumpTaskHandle = osThreadNew(StartReadPumpTask, NULL, &readPumpTask_attributes);
-
-  /* creation of writePumpTask */
-  writePumpTaskHandle = osThreadNew(StartWritePumpTask, NULL, &writePumpTask_attributes);
+  /* creation of managePumpTask */
+  managePumpTaskHandle = osThreadNew(StartManagePumpTask, NULL, &managePumpTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -128,18 +141,21 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartHeartBeatTask */
+/* USER CODE BEGIN Header_StartRefreshStateTask */
 /**
-  * @brief  Function implementing the heartBeatTask thread.
+  * @brief  Function implementing the refreshStateTas thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartHeartBeatTask */
-void StartHeartBeatTask(void *argument)
+/* USER CODE END Header_StartRefreshStateTask */
+void StartRefreshStateTask(void *argument)
 {
-  /* USER CODE BEGIN StartHeartBeatTask */
-  LOG_INFO("heartBeatTask: Start");
+  /* USER CODE BEGIN StartRefreshStateTask */
+  LOG_INFO("refreshStateTask: Start");
 
+  // Boot animation
+  HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_SET);
+  osDelay(100);
   HAL_GPIO_WritePin(PRES_1_GPIO_Port, PRES_1_Pin, GPIO_PIN_SET);
   osDelay(100);
   HAL_GPIO_WritePin(PRES_2_GPIO_Port, PRES_2_Pin, GPIO_PIN_SET);
@@ -147,6 +163,8 @@ void StartHeartBeatTask(void *argument)
   HAL_GPIO_WritePin(PRES_3_GPIO_Port, PRES_3_Pin, GPIO_PIN_SET);
   osDelay(100);
   HAL_GPIO_WritePin(PRES_4_GPIO_Port, PRES_4_Pin, GPIO_PIN_SET);
+  osDelay(100);
+  HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
   osDelay(100);
   HAL_GPIO_WritePin(PRES_1_GPIO_Port, PRES_1_Pin, GPIO_PIN_RESET);
   osDelay(100);
@@ -157,110 +175,128 @@ void StartHeartBeatTask(void *argument)
   HAL_GPIO_WritePin(PRES_4_GPIO_Port, PRES_4_Pin, GPIO_PIN_RESET);
   osDelay(100);
 
-  /* Infinite loop */
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
-  while(true) {
-    HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
-    osDelay(1000);
-  }
-#pragma clang diagnostic pop
-  /* USER CODE END StartHeartBeatTask */
-}
-
-/* USER CODE BEGIN Header_StartReadPumpTask */
-/**
-* @brief Function implementing the readPumpTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartReadPumpTask */
-void StartReadPumpTask(void *argument)
-{
-  /* USER CODE BEGIN StartReadPumpTask */
-  LOG_INFO("readPumpTask: Start");
+  // Start timers after boot init
+  osTimerStart(heartBeatTimerHandle, 1000);
+  osTimerStart(ledIhmTimerHandle, 250);
 
   /* Infinite loop */
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
   while(true) {
-    if (pompe1.mode != POMPE_DISABLED) {
-      LOG_INFO("readPumpTask: Read TOR 1");
-      pompe1.tor = HAL_GPIO_ReadPin(TOR_1_GPIO_Port, TOR_1_Pin) == GPIO_PIN_SET;
+    refreshPumpState(&pompe1, TOR_1_GPIO_Port, TOR_1_Pin, adcSelectVacuostat1);
+    refreshPumpState(&pompe2, TOR_2_GPIO_Port, TOR_2_Pin, adcSelectVacuostat2);
+    refreshPumpState(&pompe3, TOR_3_GPIO_Port, TOR_3_Pin, adcSelectVacuostat3);
+    refreshPumpState(&pompe4, TOR_4_GPIO_Port, TOR_4_Pin, adcSelectVacuostat4);
 
-      LOG_INFO("readPumpTask: Read Vacuostat 1");
-      adcSelectVacuostat1();
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 1000);
-      pompe1.vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
-      HAL_ADC_Stop(&hadc1);
-    }
-
-    if (pompe2.mode != POMPE_DISABLED) {
-      LOG_INFO("readPumpTask: Read TOR 2");
-      pompe2.tor = HAL_GPIO_ReadPin(TOR_2_GPIO_Port, TOR_2_Pin) == GPIO_PIN_SET;
-
-      LOG_INFO("readPumpTask: Read Vacuostat 2");
-      adcSelectVacuostat2();
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 1000);
-      pompe2.vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
-      HAL_ADC_Stop(&hadc1);
-    }
-
-    if (pompe3.mode != POMPE_DISABLED) {
-      LOG_INFO("readPumpTask: Read TOR3");
-      pompe3.tor = HAL_GPIO_ReadPin(TOR_3_GPIO_Port, TOR_3_Pin) == GPIO_PIN_SET;
-
-      LOG_INFO("readPumpTask: Read Vacuostat 3");
-      adcSelectVacuostat3();
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 1000);
-      pompe3.vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
-      HAL_ADC_Stop(&hadc1);
-    }
-
-    if (pompe4.mode != POMPE_DISABLED) {
-      LOG_INFO("readPumpTask: Read TOR4");
-      pompe4.tor = HAL_GPIO_ReadPin(TOR_4_GPIO_Port, TOR_4_Pin) == GPIO_PIN_SET;
-
-      LOG_INFO("readPumpTask: Read Vacuostat 4");
-      adcSelectVacuostat4();
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 1000);
-      pompe4.vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
-      HAL_ADC_Stop(&hadc1);
-    }
-
-    osDelay(500);
+    osDelay(100);
   }
 #pragma clang diagnostic pop
-  /* USER CODE END StartReadPumpTask */
+  /* USER CODE END StartRefreshStateTask */
 }
 
-/* USER CODE BEGIN Header_StartWritePumpTask */
+/* USER CODE BEGIN Header_StartManagePumpTask */
 /**
-* @brief Function implementing the writePumpTask thread.
+* @brief Function implementing the managePumpTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartWritePumpTask */
-void StartWritePumpTask(void *argument)
+/* USER CODE END Header_StartManagePumpTask */
+void StartManagePumpTask(void *argument)
 {
-  /* USER CODE BEGIN StartWritePumpTask */
+  /* USER CODE BEGIN StartManagePumpTask */
+  LOG_INFO("managePumpTask: Start");
+
   /* Infinite loop */
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
-  while (true) {
-    osDelay(1000);
+  while(true) {
+    managePump(&pompe1, STBY_1_GPIO_Port, STBY_1_Pin, PUMP_1_GPIO_Port, PUMP_1_Pin, EV_1_GPIO_Port, EV_1_Pin);
+    managePump(&pompe2, STBY_2_GPIO_Port, STBY_2_Pin, PUMP_2_GPIO_Port, PUMP_2_Pin, EV_2_GPIO_Port, EV_2_Pin);
+    managePump(&pompe3, STBY_3_GPIO_Port, STBY_3_Pin, PUMP_3_GPIO_Port, PUMP_3_Pin, EV_3_GPIO_Port, EV_3_Pin);
+    managePump(&pompe4, STBY_4_GPIO_Port, STBY_4_Pin, PUMP_4_GPIO_Port, PUMP_4_Pin, EV_4_GPIO_Port, EV_4_Pin);
+
+    osDelay(50);
   }
 #pragma clang diagnostic pop
-  /* USER CODE END StartWritePumpTask */
+  /* USER CODE END StartManagePumpTask */
+}
+
+/* heartBeatCallback function */
+void heartBeatCallback(void *argument)
+{
+  /* USER CODE BEGIN heartBeatCallback */
+  HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
+  /* USER CODE END heartBeatCallback */
+}
+
+/* ledIhmCallback function */
+void ledIhmCallback(void *argument)
+{
+  /* USER CODE BEGIN ledIhmCallback */
+  ihmLed(&pompe1, PRES_1_GPIO_Port, PRES_1_Pin);
+  ihmLed(&pompe2, PRES_2_GPIO_Port, PRES_2_Pin);
+  ihmLed(&pompe3, PRES_3_GPIO_Port, PRES_3_Pin);
+  ihmLed(&pompe4, PRES_4_GPIO_Port, PRES_4_Pin);
+  /* USER CODE END ledIhmCallback */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
+  if (pompe->mode == POMPE_ON) {
+    if (pompe->presence) {
+      HAL_GPIO_WritePin(presGpioPort, presGpioPin, GPIO_PIN_SET);
+    } else {
+      HAL_GPIO_TogglePin(presGpioPort, presGpioPin);
+    }
+  } else {
+    HAL_GPIO_WritePin(presGpioPort, presGpioPin, GPIO_PIN_RESET);
+  }
+}
 
+void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void)) {
+  if (pompe->mode != POMPE_DISABLED) {
+    pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_SET;
+
+    adcSelect();
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 1000);
+    pompe->vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
+    HAL_ADC_Stop(&hadc1);
+
+    pompe->presence = pompe->vacuum >= pompe->vacuumSeuil;
+
+  } else {
+    pompe->tor = false;
+    pompe->presence = false;
+    pompe->vacuum = 0;
+  }
+}
+
+void managePump(Pompe *pompe,
+                GPIO_TypeDef *stdbyGpioPort, uint16_t stdbyGpioPin,
+                GPIO_TypeDef *pumpGpioPort, uint16_t pumpGpioPin,
+                GPIO_TypeDef *evGpioPort, uint16_t evGpioPin) {
+
+  bool changeModePump1 = false;
+  if (pompe->mode != pompe->modePrev) {
+    pompe->modePrev = pompe->mode;
+    changeModePump1 = true;
+  }
+
+  HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, pompe->mode == POMPE_DISABLED ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  if (pompe->mode == POMPE_ON && pompe->tor && !pompe->presence ) {
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
+  }
+
+  if (pompe->mode == POMPE_OFF && changeModePump1) {
+    HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
+  }
+}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
