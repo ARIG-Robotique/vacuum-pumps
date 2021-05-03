@@ -125,35 +125,30 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 }
 
 /* USER CODE BEGIN 1 */
-static uint8_t cmd; 	// index of current cmd
-static uint8_t getCommand = true;
+static uint8_t rxBuffer[2]; 	// index of current rxBuffer
 
-void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-  LOG_INFO("Listen Complete Callback");
-  getCommand = true;
+void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c) {
+  char buf[100];
+  sprintf(buf, "i2c: Listen Complete Callback -> Command 0x%02X", rxBuffer[0]);
+  LOG_INFO(buf);
   HAL_I2C_EnableListen_IT(hi2c); // slave is ready again
 }
 
-void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
-{
+void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode) {
   char buf[100];
-  sprintf(buf, "i2c: Address Callback (Dir : %s ; Get Cmd : %d)", TransferDirection == I2C_DIRECTION_RECEIVE ? "RX" : "TX", getCommand);
+  sprintf(buf, "i2c: Address Callback (Dir : %s)", TransferDirection == I2C_DIRECTION_RECEIVE ? "RX" : "TX");
   LOG_INFO(buf);
-  if(TransferDirection == I2C_DIRECTION_TRANSMIT) {
-    if(getCommand) {
-      HAL_I2C_Slave_Seq_Receive_IT(hi2c, &cmd, 1, I2C_NEXT_FRAME);
-    } else {
-      // Implement else when data is received
-      LOG_WARN("i2c: Address Callback, no data needed in this firmware");
-    }
+
+  if (TransferDirection == I2C_DIRECTION_TRANSMIT) {
+    HAL_I2C_Slave_Seq_Receive_IT(hi2c, rxBuffer, sizeof(rxBuffer), I2C_FIRST_FRAME);
+
   } else {
-    if (cmd == I2C_CMD_GET_VERSION) {
+    if (rxBuffer[0] == I2C_CMD_GET_VERSION) {
       sprintf(buf, "i2c: Address Callback send version %s", FIRMWARE_VERSION);
-      LOG_INFO("i2c: Address Callback send version");
+      LOG_INFO(buf);
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION), I2C_NEXT_FRAME);
 
-    } else if (cmd == I2C_CMD_GET_ALL_PUMP_VALUES) {
+    } else if (rxBuffer[0] == I2C_CMD_GET_ALL_PUMP_VALUES) {
       LOG_INFO("i2c: Address Callback send all pump status");
       uint8_t txBuffer[8];
 
@@ -171,15 +166,11 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
       // Pompe 4
       txBuffer[6] = ((pompe4.vacuum >> 8) & 0xFF) + (pompe4.presence << 7) + (pompe4.tor << 6);
-      txBuffer[7] = (pompe4.vacuum & 0xFF) ;
+      txBuffer[7] = (pompe4.vacuum & 0xFF);
 
-//      for (int i = 0 ; i < sizeof(txBuffer); i++) {
-//        sprintf(buf, "i2c: idx %d -> 0x%02X", i, txBuffer[i]);
-//        LOG_DEBUG(buf);
-//      }
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
-    } else if (cmd == I2C_CMD_GET_PUMP1_VALUES) {
+    } else if (rxBuffer[0] == I2C_CMD_GET_PUMP1_VALUES) {
       LOG_INFO("i2c: Address Callback send pump 1 status");
       uint8_t txBuffer[2];
 
@@ -189,7 +180,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
-    } else if (cmd == I2C_CMD_GET_PUMP2_VALUES) {
+    } else if (rxBuffer[0] == I2C_CMD_GET_PUMP2_VALUES) {
       LOG_INFO("i2c: Address Callback send pump 2 status");
       uint8_t txBuffer[2];
 
@@ -199,7 +190,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
-    } else if (cmd == I2C_CMD_GET_PUMP3_VALUES) {
+    } else if (rxBuffer[0] == I2C_CMD_GET_PUMP3_VALUES) {
       LOG_INFO("i2c: Address Callback send pump 3 status");
       uint8_t txBuffer[2];
 
@@ -209,7 +200,7 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
 
       HAL_I2C_Slave_Seq_Transmit_IT(hi2c, txBuffer, sizeof(txBuffer), I2C_NEXT_FRAME);
 
-    } else if (cmd == I2C_CMD_GET_PUMP4_VALUES) {
+    } else if (rxBuffer[0] == I2C_CMD_GET_PUMP4_VALUES) {
       LOG_INFO("i2c: Address Callback send pump 4 status");
       uint8_t txBuffer[2];
 
@@ -225,44 +216,41 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
   }
 }
 
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-  if(getCommand) {
-    char buf[100];
-    sprintf(buf, "i2c: RX complete Callback -> Command = %hhu", cmd);
+void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+  char buf[100];
+  sprintf(buf, "i2c: RX complete Callback -> Command = 0x%02X", rxBuffer[0]);
+  LOG_INFO(buf);
+
+  if (rxBuffer[0] == I2C_CMD_SET_PUMP_MODE) {
+    sprintf(buf, "i2c: RX complete Callback -> All pumps = 0x%02X", rxBuffer[1]);
     LOG_INFO(buf);
-    getCommand = false;
-  } else {
-    // Implement else if received value from command
-    LOG_WARN("i2c: RX complete Callback, no command");
+    pompe1.mode = rxBuffer[1] & 0x03;
+    pompe2.mode = (rxBuffer[1] >> 2) & 0x03;
+    pompe3.mode = (rxBuffer[1] >> 4) & 0x03;
+    pompe4.mode = (rxBuffer[1] >> 6) & 0x03;
   }
 }
 
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
+void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {
   char buf[100];
-  sprintf(buf, "i2c: TX complete Callback -> Command = %hhu", cmd);
+  sprintf(buf, "i2c: TX complete Callback -> Command = 0x%02X", rxBuffer[0]);
   LOG_INFO(buf);
 }
 
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
-{
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
   uint32_t errorCode = HAL_I2C_GetError(hi2c);
-  if( errorCode == HAL_I2C_ERROR_AF ) {
+  if (errorCode == HAL_I2C_ERROR_AF) {
     // transaction terminated by master
-    LOG_ERROR("i2c: Error Callback -> transaction terminated by master" );
+    LOG_WARN("i2c: Error Callback -> transaction terminated by master");
   } else {
     char buf[100];
     sprintf(buf, "i2c: Error Callback -> err=0x%02lX", errorCode);
     LOG_ERROR(buf);
   }
-  getCommand = true;
-  cmd = 0;
 }
 
-void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-  LOG_INFO("i2c: Abort comptete callback" );  // never seen...
+void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c) {
+  LOG_INFO("i2c: Abort complete callback");  // never seen...
 }
 
 /* USER CODE END 1 */

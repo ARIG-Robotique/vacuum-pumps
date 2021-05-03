@@ -149,11 +149,7 @@ void Error_Handler(void);
 #define I2C_CMD_GET_PUMP3_VALUES 0x23 // #
 #define I2C_CMD_GET_PUMP4_VALUES 0x24 // $
 
-#define I2C_CMD_SET_ALL_PUMP_MODE 0x30 // 0
-#define I2C_CMD_SET_PUMP1_MODE 0x31 // 1
-#define I2C_CMD_SET_PUMP2_MODE 0x32 // 2
-#define I2C_CMD_SET_PUMP3_MODE 0x33 // 3
-#define I2C_CMD_SET_PUMP4_MODE 0x34 // 4
+#define I2C_CMD_SET_PUMP_MODE 0x30 // 0
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
