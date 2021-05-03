@@ -47,7 +47,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+bool ihmLedState = false;
 /* USER CODE END Variables */
 /* Definitions for refreshStateTas */
 osThreadId_t refreshStateTasHandle;
@@ -237,6 +237,8 @@ void ledIhmCallback(void *argument)
   ihmLed(&pompe2, PRES_2_GPIO_Port, PRES_2_Pin);
   ihmLed(&pompe3, PRES_3_GPIO_Port, PRES_3_Pin);
   ihmLed(&pompe4, PRES_4_GPIO_Port, PRES_4_Pin);
+
+  ihmLedState = !ihmLedState;
   /* USER CODE END ledIhmCallback */
 }
 
@@ -247,7 +249,7 @@ void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
     if (pompe->presence) {
       HAL_GPIO_WritePin(presGpioPort, presGpioPin, GPIO_PIN_SET);
     } else {
-      HAL_GPIO_TogglePin(presGpioPort, presGpioPin);
+      HAL_GPIO_WritePin(presGpioPort, presGpioPin, ihmLedState ? GPIO_PIN_SET : GPIO_PIN_RESET);
     }
   } else {
     HAL_GPIO_WritePin(presGpioPort, presGpioPin, GPIO_PIN_RESET);
