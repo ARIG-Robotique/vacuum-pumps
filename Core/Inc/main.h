@@ -49,7 +49,9 @@ typedef struct {
     bool tor;
     bool presence;
 
-    uint16_t vacuumSeuil;
+    uint16_t vacuumPresence;
+    uint16_t vacuumOK;
+    uint16_t vacuumNOK;
     Pompe_Mode mode;
     Pompe_Mode modePrev;
 } Pompe;
@@ -140,6 +142,11 @@ void Error_Handler(void);
 
 // Résolution des convertisseurs ADC de la STM32F103C8
 #define ADC_RESOLUTION 4096.0
+
+// SEUIL DE POMPE
+#define POMPE_VACUUM_PRESENCE (ADC_RESOLUTION / 2)
+#define POMPE_VACUUM_NOK (POMPE_VACUUM_PRESENCE + 100)
+#define POMPE_VACUUM_OK 2700
 
 // Commande I2C
 #define I2C_CMD_GET_VERSION 0x76 // v

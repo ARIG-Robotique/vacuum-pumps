@@ -258,7 +258,7 @@ void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
 
 void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void)) {
   if (pompe->mode != POMPE_DISABLED) {
-    pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_SET;
+    pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_RESET;
 
     adcSelect();
     HAL_ADC_Start(&hadc1);
@@ -266,7 +266,7 @@ void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioP
     pompe->vacuum = HAL_ADC_GetValue(&hadc1); // (HAL_ADC_GetValue(&hadc1) / ADC_RESOLUTION) * V_REF;
     HAL_ADC_Stop(&hadc1);
 
-    pompe->presence = pompe->vacuum >= pompe->vacuumSeuil;
+    pompe->presence = pompe->vacuum >= pompe->vacuumPresence;
 
   } else {
     pompe->tor = false;
@@ -287,8 +287,12 @@ void managePump(Pompe *pompe,
   }
 
   HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, pompe->mode == POMPE_DISABLED ? GPIO_PIN_RESET : GPIO_PIN_SET);
-  if (pompe->mode == POMPE_ON && pompe->tor && !pompe->presence ) {
-    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
+  if (pompe->mode == POMPE_ON && pompe->tor) {
+    if ((pompe->vacuum < pompe->vacuumOK && HAL_GPIO_ReadPin(pumpGpioPort, pumpGpioPin) == GPIO_PIN_SET) || (pompe->vacuum < pompe->vacuumNOK)) {
+      HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
+    } else {
+      HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
+    }
   } else {
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
   }

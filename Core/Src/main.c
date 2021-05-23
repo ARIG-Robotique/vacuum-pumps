@@ -98,13 +98,21 @@ int main(void)
 
   LOG_INFO("main: Init default value for pumps");
   pompe1.mode = POMPE_DISABLED;
-  pompe1.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe1.vacuumPresence = POMPE_VACUUM_PRESENCE;
+  pompe1.vacuumOK = POMPE_VACUUM_OK;
+  pompe1.vacuumNOK = POMPE_VACUUM_NOK;
   pompe2.mode = POMPE_DISABLED;
-  pompe2.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe2.vacuumPresence = POMPE_VACUUM_PRESENCE;
+  pompe2.vacuumOK = POMPE_VACUUM_OK;
+  pompe2.vacuumNOK = POMPE_VACUUM_NOK;
   pompe3.mode = POMPE_DISABLED;
-  pompe3.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe3.vacuumPresence = POMPE_VACUUM_PRESENCE;
+  pompe3.vacuumOK = POMPE_VACUUM_OK;
+  pompe3.vacuumNOK = POMPE_VACUUM_NOK;
   pompe4.mode = POMPE_DISABLED;
-  pompe4.vacuumSeuil = ADC_RESOLUTION / 2;
+  pompe4.vacuumPresence = POMPE_VACUUM_PRESENCE;
+  pompe4.vacuumOK = POMPE_VACUUM_OK;
+  pompe4.vacuumNOK = POMPE_VACUUM_NOK;
 
   LOG_INFO("main: Start I²C listener");
   HAL_I2C_EnableListen_IT(&hi2c1);
