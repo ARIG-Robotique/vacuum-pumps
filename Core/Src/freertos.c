@@ -188,7 +188,7 @@ void StartRefreshStateTask(void *argument)
     refreshPumpState(&pompe3, TOR_3_GPIO_Port, TOR_3_Pin, adcSelectVacuostat3);
     refreshPumpState(&pompe4, TOR_4_GPIO_Port, TOR_4_Pin, adcSelectVacuostat4);
 
-    osDelay(100);
+    osDelay(50);
   }
 #pragma clang diagnostic pop
   /* USER CODE END StartRefreshStateTask */
@@ -280,26 +280,56 @@ void managePump(Pompe *pompe,
                 GPIO_TypeDef *pumpGpioPort, uint16_t pumpGpioPin,
                 GPIO_TypeDef *evGpioPort, uint16_t evGpioPin) {
 
+  // Detection du changement de mode de la pompe
   bool changeModePump = false;
   if (pompe->mode != pompe->modePrev) {
     pompe->modePrev = pompe->mode;
     changeModePump = true;
   }
 
-  HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, pompe->mode == POMPE_DISABLED ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  // Si le mode est disabled, on met le composant de gestion en Stand Bye
+  if (pompe-> mode == POMPE_DISABLED && changeModePump) {
+    HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
+
+  // Si on est sur un changement de mode, du coup autre que DISABLED, on active le composant
+  } else if (changeModePump) {
+    HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, GPIO_PIN_SET);
+  }
+
+  // Si on a une presence détectée et la pompe ON
   if (pompe->mode == POMPE_ON && pompe->tor) {
+    HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
     if ((pompe->vacuum < pompe->vacuumOK && HAL_GPIO_ReadPin(pumpGpioPort, pumpGpioPin) == GPIO_PIN_SET) || (pompe->vacuum < pompe->vacuumNOK)) {
       HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
     } else {
       HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
     }
-  } else {
-    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
   }
 
+  // Si on est sur un changement de mode et en mode OFF, procéssus de release de l'objet en différer pour tous les
+  // déclencher quasiment en même temps.
   if (pompe->mode == POMPE_OFF && changeModePump) {
+    pompe->cycleDepose = 0;
+  } else if (pompe->mode == POMPE_OFF && !changeModePump && pompe->cycleDepose < 10) {
+    pompe->cycleDepose++;
+  }
+
+  // 1 incrément de cycle égale le délai d'attente entre deux exec (x 50ms)
+  if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 0) {
+    // Cycle dépose 1 -> Changement de mode sur OFF
+    //  * Allumage pompe à vide
+    //  * Ouverture electrovanne
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_SET);
-  } else {
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 6) {
+    // Cycle dépose 2 -> 300ms plus tard
+    //  * Arret Pompe à vide
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 10) {
+    // Cycle dépose 3 -> 500ms plus tard
+    //  * Fermeture electrovanne
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
   }
 }

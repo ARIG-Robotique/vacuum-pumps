@@ -54,6 +54,7 @@ typedef struct {
     uint16_t vacuumNOK;
     Pompe_Mode mode;
     Pompe_Mode modePrev;
+    uint8_t cycleDepose;
 } Pompe;
 
 extern Pompe pompe1;
