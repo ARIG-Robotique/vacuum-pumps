@@ -280,10 +280,10 @@ void managePump(Pompe *pompe,
                 GPIO_TypeDef *pumpGpioPort, uint16_t pumpGpioPin,
                 GPIO_TypeDef *evGpioPort, uint16_t evGpioPin) {
 
-  bool changeModePump1 = false;
+  bool changeModePump = false;
   if (pompe->mode != pompe->modePrev) {
     pompe->modePrev = pompe->mode;
-    changeModePump1 = true;
+    changeModePump = true;
   }
 
   HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, pompe->mode == POMPE_DISABLED ? GPIO_PIN_RESET : GPIO_PIN_SET);
@@ -297,7 +297,7 @@ void managePump(Pompe *pompe,
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
   }
 
-  if (pompe->mode == POMPE_OFF && changeModePump1) {
+  if (pompe->mode == POMPE_OFF && changeModePump) {
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_SET);
   } else {
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
