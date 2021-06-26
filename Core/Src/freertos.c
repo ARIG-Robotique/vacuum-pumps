@@ -245,7 +245,7 @@ void ledIhmCallback(void *argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
-  if (pompe->mode == POMPE_ON) {
+  if (pompe->mode == POMPE_ON || pompe->mode == POMPE_ON_FORCE) {
     if (pompe->presence) {
       HAL_GPIO_WritePin(presGpioPort, presGpioPin, GPIO_PIN_SET);
     } else {
@@ -306,9 +306,12 @@ void managePump(Pompe *pompe,
     } else {
       HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
     }
-  } else if (pompe-> mode == POMPE_ON && !pompe->tor) {
+  } else if (pompe->mode == POMPE_ON && !pompe->tor) {
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
+  } else if (pompe->mode == POMPE_ON_FORCE) {
+    HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
   }
 
   // Si on est sur un changement de mode et en mode OFF, procéssus de release de l'objet en différer pour tous les

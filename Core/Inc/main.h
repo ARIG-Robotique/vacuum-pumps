@@ -39,9 +39,10 @@ extern "C" {
 /* USER CODE BEGIN ET */
 typedef enum
 {
-    POMPE_DISABLED=3,
-    POMPE_ON=1,
     POMPE_OFF=0,
+    POMPE_ON=1,
+    POMPE_ON_FORCE=2,
+    POMPE_DISABLED=3,
 } Pompe_Mode;
 
 typedef struct {
