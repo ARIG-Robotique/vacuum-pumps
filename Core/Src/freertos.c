@@ -257,8 +257,11 @@ void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
 }
 
 void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void)) {
+  // Refresh du capteur TOR tous le temps
+  pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_RESET;
+
+  // Refresh des infos lié au vide
   if (pompe->mode != POMPE_DISABLED) {
-    pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_RESET;
 
     adcSelect();
     HAL_ADC_Start(&hadc1);
@@ -269,7 +272,6 @@ void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioP
     pompe->presence = pompe->vacuum >= pompe->vacuumPresence;
 
   } else {
-    pompe->tor = false;
     pompe->presence = false;
     pompe->vacuum = 0;
   }
