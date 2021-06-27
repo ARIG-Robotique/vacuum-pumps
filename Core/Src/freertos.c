@@ -215,7 +215,7 @@ void StartManagePumpTask(void *argument)
     managePump(&pompe3, STBY_3_GPIO_Port, STBY_3_Pin, PUMP_3_GPIO_Port, PUMP_3_Pin, EV_3_GPIO_Port, EV_3_Pin);
     managePump(&pompe4, STBY_4_GPIO_Port, STBY_4_Pin, PUMP_4_GPIO_Port, PUMP_4_Pin, EV_4_GPIO_Port, EV_4_Pin);
 
-    osDelay(50);
+    osDelay(100);
   }
 #pragma clang diagnostic pop
   /* USER CODE END StartManagePumpTask */
@@ -320,7 +320,7 @@ void managePump(Pompe *pompe,
   // déclencher quasiment en même temps.
   if (pompe->mode == POMPE_OFF && changeModePump) {
     pompe->cycleDepose = 0;
-  } else if (pompe->mode == POMPE_OFF && !changeModePump && pompe->cycleDepose < 10) {
+  } else if (pompe->mode == POMPE_OFF && !changeModePump && pompe->cycleDepose < 6) {
     pompe->cycleDepose++;
   }
 
@@ -328,13 +328,13 @@ void managePump(Pompe *pompe,
   if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 0) {
     // Cycle dépose 1 (0ms) -> Allumage pompe à vide
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
-  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 3) {
-    // Cycle dépose 2 (150ms) -> Ouverture elextrovanne
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 2) {
+    // Cycle dépose 2 (200ms) -> Ouverture electrovanne
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_SET);
-  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 6) {
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 3) {
     // Cycle dépose 3 (300ms) -> Arret Pompe à vide
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
-  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 10) {
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 5) {
     // Cycle dépose 4 (500ms) -> Fermeture electrovanne
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
   }
