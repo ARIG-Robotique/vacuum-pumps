@@ -50,6 +50,8 @@ Pompe pompe1;
 Pompe pompe2;
 Pompe pompe3;
 Pompe pompe4;
+
+uint32_t i2cErrorCode;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,6 +117,7 @@ int main(void)
   pompe4.vacuumNOK = POMPE_VACUUM_NOK;
 
   LOG_INFO("main: Start I²C listener");
+  i2cErrorCode = HAL_I2C_ERROR_NONE;
   HAL_I2C_EnableListen_IT(&hi2c1);
   /* USER CODE END 2 */
 

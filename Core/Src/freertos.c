@@ -225,7 +225,17 @@ void StartManagePumpTask(void *argument)
 void heartBeatCallback(void *argument)
 {
   /* USER CODE BEGIN heartBeatCallback */
-  HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
+  if (i2cErrorCode == HAL_I2C_ERROR_NONE) {
+    HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
+  } else {
+    HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
+    osDelay(500);
+    for (uint32_t i = 0 ; i < i2cErrorCode * 2 ; i++) {
+      HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
+      osDelay(150);
+    }
+    HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
+  }
   /* USER CODE END heartBeatCallback */
 }
 

@@ -63,6 +63,8 @@ extern Pompe pompe2;
 extern Pompe pompe3;
 extern Pompe pompe4;
 
+extern uint32_t i2cErrorCode;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

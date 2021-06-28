@@ -238,13 +238,13 @@ void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c) {
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-  uint32_t errorCode = HAL_I2C_GetError(hi2c);
-  if (errorCode == HAL_I2C_ERROR_AF) {
+  i2cErrorCode = HAL_I2C_GetError(hi2c);
+  if (i2cErrorCode == HAL_I2C_ERROR_AF) {
     // transaction terminated by master
     LOG_WARN("i2c: Error Callback -> transaction terminated by master");
   } else {
     char buf[100];
-    sprintf(buf, "i2c: Error Callback -> err=0x%02lX", errorCode);
+    sprintf(buf, "i2c: Error Callback -> err=0x%02lX", i2cErrorCode);
     LOG_ERROR(buf);
   }
 }
