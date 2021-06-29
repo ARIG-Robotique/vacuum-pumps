@@ -56,13 +56,6 @@ const osThreadAttr_t refreshStateTas_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for managePumpTask */
-osThreadId_t managePumpTaskHandle;
-const osThreadAttr_t managePumpTask_attributes = {
-  .name = "managePumpTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
 /* Definitions for heartBeatTimer */
 osTimerId_t heartBeatTimerHandle;
 const osTimerAttr_t heartBeatTimer_attributes = {
@@ -85,7 +78,6 @@ void managePump(Pompe *pompe,
 /* USER CODE END FunctionPrototypes */
 
 void StartRefreshStateTask(void *argument);
-void StartManagePumpTask(void *argument);
 void heartBeatCallback(void *argument);
 void ledIhmCallback(void *argument);
 
@@ -127,9 +119,6 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of refreshStateTas */
   refreshStateTasHandle = osThreadNew(StartRefreshStateTask, NULL, &refreshStateTas_attributes);
-
-  /* creation of managePumpTask */
-  managePumpTaskHandle = osThreadNew(StartManagePumpTask, NULL, &managePumpTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -184,41 +173,21 @@ void StartRefreshStateTask(void *argument)
 #pragma ide diagnostic ignored "EndlessLoop"
   while(true) {
     refreshPumpState(&pompe1, TOR_1_GPIO_Port, TOR_1_Pin, adcSelectVacuostat1);
-    refreshPumpState(&pompe2, TOR_2_GPIO_Port, TOR_2_Pin, adcSelectVacuostat2);
-    refreshPumpState(&pompe3, TOR_3_GPIO_Port, TOR_3_Pin, adcSelectVacuostat3);
-    refreshPumpState(&pompe4, TOR_4_GPIO_Port, TOR_4_Pin, adcSelectVacuostat4);
-
-    osDelay(50);
-  }
-#pragma clang diagnostic pop
-  /* USER CODE END StartRefreshStateTask */
-}
-
-/* USER CODE BEGIN Header_StartManagePumpTask */
-/**
-* @brief Function implementing the managePumpTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartManagePumpTask */
-void StartManagePumpTask(void *argument)
-{
-  /* USER CODE BEGIN StartManagePumpTask */
-  LOG_INFO("managePumpTask: Start");
-
-  /* Infinite loop */
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
-  while(true) {
     managePump(&pompe1, STBY_1_GPIO_Port, STBY_1_Pin, PUMP_1_GPIO_Port, PUMP_1_Pin, EV_1_GPIO_Port, EV_1_Pin);
+
+    refreshPumpState(&pompe2, TOR_2_GPIO_Port, TOR_2_Pin, adcSelectVacuostat2);
     managePump(&pompe2, STBY_2_GPIO_Port, STBY_2_Pin, PUMP_2_GPIO_Port, PUMP_2_Pin, EV_2_GPIO_Port, EV_2_Pin);
+
+    refreshPumpState(&pompe3, TOR_3_GPIO_Port, TOR_3_Pin, adcSelectVacuostat3);
     managePump(&pompe3, STBY_3_GPIO_Port, STBY_3_Pin, PUMP_3_GPIO_Port, PUMP_3_Pin, EV_3_GPIO_Port, EV_3_Pin);
+
+    refreshPumpState(&pompe4, TOR_4_GPIO_Port, TOR_4_Pin, adcSelectVacuostat4);
     managePump(&pompe4, STBY_4_GPIO_Port, STBY_4_Pin, PUMP_4_GPIO_Port, PUMP_4_Pin, EV_4_GPIO_Port, EV_4_Pin);
 
     osDelay(100);
   }
 #pragma clang diagnostic pop
-  /* USER CODE END StartManagePumpTask */
+  /* USER CODE END StartRefreshStateTask */
 }
 
 /* heartBeatCallback function */
