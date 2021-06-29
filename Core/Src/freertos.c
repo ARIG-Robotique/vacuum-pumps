@@ -49,10 +49,10 @@
 /* USER CODE BEGIN Variables */
 bool ihmLedState = false;
 /* USER CODE END Variables */
-/* Definitions for refreshStateTas */
-osThreadId_t refreshStateTasHandle;
-const osThreadAttr_t refreshStateTas_attributes = {
-  .name = "refreshStateTas",
+/* Definitions for mainTask */
+osThreadId_t mainTaskHandle;
+const osThreadAttr_t mainTask_attributes = {
+  .name = "mainTask",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -77,7 +77,7 @@ void managePump(Pompe *pompe,
                 GPIO_TypeDef *evGpioPort, uint16_t evGpioPin);
 /* USER CODE END FunctionPrototypes */
 
-void StartRefreshStateTask(void *argument);
+void StartMainTask(void *argument);
 void heartBeatCallback(void *argument);
 void ledIhmCallback(void *argument);
 
@@ -117,8 +117,8 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of refreshStateTas */
-  refreshStateTasHandle = osThreadNew(StartRefreshStateTask, NULL, &refreshStateTas_attributes);
+  /* creation of mainTask */
+  mainTaskHandle = osThreadNew(StartMainTask, NULL, &mainTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -130,16 +130,16 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartRefreshStateTask */
+/* USER CODE BEGIN Header_StartMainTask */
 /**
-  * @brief  Function implementing the refreshStateTas thread.
+  * @brief  Function implementing the mainTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartRefreshStateTask */
-void StartRefreshStateTask(void *argument)
+/* USER CODE END Header_StartMainTask */
+void StartMainTask(void *argument)
 {
-  /* USER CODE BEGIN StartRefreshStateTask */
+  /* USER CODE BEGIN StartMainTask */
   LOG_INFO("refreshStateTask: Start");
 
   // Boot animation
@@ -187,7 +187,7 @@ void StartRefreshStateTask(void *argument)
     osDelay(100);
   }
 #pragma clang diagnostic pop
-  /* USER CODE END StartRefreshStateTask */
+  /* USER CODE END StartMainTask */
 }
 
 /* heartBeatCallback function */
