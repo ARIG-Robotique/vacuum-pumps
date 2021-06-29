@@ -198,10 +198,10 @@ void heartBeatCallback(void *argument)
     HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
   } else {
     HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
-    osDelay(500);
+    osDelay(1000);
     for (uint32_t i = 0 ; i < i2cErrorCode * 2 ; i++) {
       HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
-      osDelay(150);
+      osDelay(250);
     }
     HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
   }
