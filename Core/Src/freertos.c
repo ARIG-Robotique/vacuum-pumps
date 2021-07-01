@@ -140,7 +140,7 @@ void MX_FREERTOS_Init(void) {
 void StartMainTask(void *argument)
 {
   /* USER CODE BEGIN StartMainTask */
-  LOG_INFO("refreshStateTask: Start");
+  LOG_INFO("mainTask: Start");
 
   // Boot animation
   HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_SET);
@@ -194,9 +194,10 @@ void StartMainTask(void *argument)
 void heartBeatCallback(void *argument)
 {
   /* USER CODE BEGIN heartBeatCallback */
-  if (i2cErrorCode == HAL_I2C_ERROR_NONE) {
+  if (i2cErrorCode == HAL_I2C_ERROR_NONE) { // Pas d'erreur
     HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
-  } else {
+
+  } else { // Erreur I2C
     HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
     osDelay(1000);
     for (uint32_t i = 0 ; i < i2cErrorCode * 2 ; i++) {
