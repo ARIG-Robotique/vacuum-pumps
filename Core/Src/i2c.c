@@ -253,6 +253,9 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, ui
       LOG_WARN("i2c: Address Callback, unknown command");
       sprintf(buf, "i2c: Address Callback (Dir : %s) : Command = 0x%02X", TransferDirection == I2C_DIRECTION_RECEIVE ? "RX" : "TX", rxBuffer[0]);
       LOG_WARN(buf);
+
+      uint8_t txBuffer[1] = {0xFF};
+      HAL_I2C_Slave_Seq_Transmit_DMA(hi2c, txBuffer, 1, I2C_LAST_FRAME);
     }
   }
 }
