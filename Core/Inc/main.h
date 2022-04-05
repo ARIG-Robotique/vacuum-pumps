@@ -144,6 +144,11 @@ void Error_Handler(void);
 #define TOR_2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
+// Configuration de l'aspiration lors de la release des EVs
+// 0 = Inactif (release directe de l'electrovanne)
+// 1 = Actif (aspiration avant la release)
+#define ASPIRATION_ON_RELEASE 0
+
 // Résolution des convertisseurs ADC de la STM32F103C8
 #define ADC_RESOLUTION 4096.0
 
