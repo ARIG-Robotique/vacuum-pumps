@@ -70,11 +70,14 @@ const osTimerAttr_t ledIhmTimer_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin);
+
 void refreshPumpState(Pompe *pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void));
+
 void managePump(Pompe *pompe,
                 GPIO_TypeDef *stdbyGpioPort, uint16_t stdbyGpioPin,
                 GPIO_TypeDef *pumpGpioPort, uint16_t pumpGpioPin,
                 GPIO_TypeDef *evGpioPort, uint16_t evGpioPin);
+
 /* USER CODE END FunctionPrototypes */
 
 void StartMainTask(void *argument);
@@ -171,7 +174,7 @@ void StartMainTask(void *argument)
   /* Infinite loop */
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
-  while(true) {
+  while (true) {
     refreshPumpState(&pompe1, TOR_1_GPIO_Port, TOR_1_Pin, adcSelectVacuostat1);
     managePump(&pompe1, STBY_1_GPIO_Port, STBY_1_Pin, PUMP_1_GPIO_Port, PUMP_1_Pin, EV_1_GPIO_Port, EV_1_Pin);
 
@@ -200,7 +203,7 @@ void heartBeatCallback(void *argument)
   } else { // Erreur I2C
     HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_RESET);
     osDelay(1000);
-    for (uint32_t i = 0 ; i < i2cErrorCode * 2 ; i++) {
+    for (uint32_t i = 0; i < i2cErrorCode * 2; i++) {
       HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
       osDelay(250);
     }
@@ -236,7 +239,7 @@ void ihmLed(Pompe *pompe, GPIO_TypeDef *presGpioPort, uint16_t presGpioPin) {
   }
 }
 
-void refreshPumpState(Pompe* pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void)) {
+void refreshPumpState(Pompe *pompe, GPIO_TypeDef *torGpioPort, uint16_t torGpioPin, void (*adcSelect)(void)) {
   // Refresh du capteur TOR tous le temps
   pompe->tor = HAL_GPIO_ReadPin(torGpioPort, torGpioPin) == GPIO_PIN_RESET;
 
@@ -270,12 +273,12 @@ void managePump(Pompe *pompe,
   }
 
   // Si le mode est disabled, on met le composant de gestion en Stand Bye
-  if (pompe-> mode == POMPE_DISABLED && changeModePump) {
+  if (pompe->mode == POMPE_DISABLED && changeModePump) {
     HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
 
-  // Si on est sur un changement de mode, du coup autre que DISABLED, on active le composant
+    // Si on est sur un changement de mode, du coup autre que DISABLED, on active le composant
   } else if (changeModePump) {
     HAL_GPIO_WritePin(stdbyGpioPort, stdbyGpioPin, GPIO_PIN_SET);
   }
@@ -283,7 +286,8 @@ void managePump(Pompe *pompe,
   // Si on a une presence détectée et la pompe ON
   if (pompe->mode == POMPE_ON && pompe->tor) {
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
-    if ((pompe->vacuum < pompe->vacuumOK && HAL_GPIO_ReadPin(pumpGpioPort, pumpGpioPin) == GPIO_PIN_SET) || (pompe->vacuum < pompe->vacuumNOK)) {
+    if ((pompe->vacuum < pompe->vacuumOK && HAL_GPIO_ReadPin(pumpGpioPort, pumpGpioPin) == GPIO_PIN_SET) ||
+        (pompe->vacuum < pompe->vacuumNOK)) {
       HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_SET);
     } else {
       HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
