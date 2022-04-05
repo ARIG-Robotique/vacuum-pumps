@@ -321,4 +321,3 @@ void managePump(Pompe *pompe,
 }
 /* USER CODE END Application */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
