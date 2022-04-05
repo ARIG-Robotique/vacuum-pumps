@@ -338,6 +338,10 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
     sprintf(buf, "i2c: Error Callback -> err=0x%02lX", i2cErrorCode);
     LOG_ERROR(buf);
   }
+
+  LOG_WARN("i2c: Error Callback -> restart I2C");
+  HAL_I2C_MspDeInit(hi2c);
+  HAL_I2C_MspInit(hi2c);
 }
 
 void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c) {
