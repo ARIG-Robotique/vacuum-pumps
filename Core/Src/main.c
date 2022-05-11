@@ -83,6 +83,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  i2cErrorCode = HAL_I2C_ERROR_NONE;
   LOG_INFO("main: Begin Init");
   /* USER CODE END Init */
 
@@ -119,7 +120,6 @@ int main(void)
   pompe4.vacuumNOK = POMPE_VACUUM_NOK;
 
   LOG_INFO("main: Start I²C listener");
-  i2cErrorCode = HAL_I2C_ERROR_NONE;
   HAL_I2C_EnableListen_IT(&hi2c1);
   /* USER CODE END 2 */
 

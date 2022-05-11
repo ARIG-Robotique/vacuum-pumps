@@ -79,6 +79,19 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PB6     ------> I2C1_SCL
     PB7     ------> I2C1_SDA
     */
+
+    // Custom code to software reset the bus
+    // Pull-uphigh to recover from locking in BUSY state
+    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;//GPIO is configured as output
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;//Strong pull up
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(GPIOB, 6, GPIO_PIN_SET);//Pull SCL up
+    HAL_GPIO_WritePin(GPIOB, 7, GPIO_PIN_SET);//Pull up SDA
+    hi2c1.Instance->CR1 = I2C_CR1_SWRST; // Reset I2C controller
+    hi2c1.Instance-> CR1 = 0; // Release the reset (not automatically cleared) cf doc
+    // end of custom code
+
     GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -356,6 +369,12 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
     sprintf(buf, "i2c: Error Callback -> err=0x%02lX", i2cErrorCode);
     LOG_ERROR(buf);
   }
+
+  // Software reset
+  HAL_I2C_DeInit(&hi2c1);
+  HAL_I2C_Init(&hi2c1);
+
+  HAL_I2C_EnableListen_IT(hi2c); // Enable bus
 }
 
 void HAL_I2C_AbortCpltCallback(I2C_HandleTypeDef *hi2c) {

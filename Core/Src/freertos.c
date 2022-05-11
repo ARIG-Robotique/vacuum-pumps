@@ -200,7 +200,7 @@ void heartBeatCallback(void *argument)
   if (i2cErrorCode == HAL_I2C_ERROR_NONE) { // Pas d'erreur
     HAL_GPIO_TogglePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin);
 
-  } else { // Erreur I2C
+  } else { // Erreur I2C persistante
     HAL_GPIO_WritePin(HEART_BEAT_GPIO_Port, HEART_BEAT_Pin, GPIO_PIN_SET);
   }
   /* USER CODE END heartBeatCallback */
