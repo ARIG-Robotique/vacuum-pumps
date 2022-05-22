@@ -298,7 +298,7 @@ void managePump(Pompe *pompe,
   // déclencher quasiment en même temps.
   if (pompe->mode == POMPE_OFF && changeModePump) {
     pompe->cycleDepose = 0;
-  } else if (pompe->mode == POMPE_OFF && !changeModePump && pompe->cycleDepose < 6) {
+  } else if (pompe->mode == POMPE_OFF && !changeModePump && pompe->cycleDepose < 20) {
     pompe->cycleDepose++;
   }
 
@@ -322,8 +322,8 @@ void managePump(Pompe *pompe,
     // Cycle dépose 1 (0ms) -> Ouverture electrovanne + arret pompe
     HAL_GPIO_WritePin(pumpGpioPort, pumpGpioPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_SET);
-  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 5) {
-    // Cycle dépose 5 (500ms) -> Fermeture electrovanne
+  } else if (pompe->mode == POMPE_OFF && pompe->cycleDepose == 19) {
+    // Cycle dépose 19 (1900ms) -> Fermeture electrovanne
     HAL_GPIO_WritePin(evGpioPort, evGpioPin, GPIO_PIN_RESET);
   }
 #endif
