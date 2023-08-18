@@ -142,6 +142,7 @@ void Error_Handler(void);
 #define TOR_1_GPIO_Port GPIOB
 #define TOR_2_Pin GPIO_PIN_9
 #define TOR_2_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 // Configuration de l'aspiration lors de la release des EVs
