@@ -52,4 +52,3 @@ void adcSelectVacuostat4(void);
 #endif
 
 #endif /* __ADC_H__ */
-
