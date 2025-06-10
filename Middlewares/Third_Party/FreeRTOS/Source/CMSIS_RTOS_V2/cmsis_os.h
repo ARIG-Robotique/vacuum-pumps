@@ -1,7 +1,5 @@
-/* --------------------------------------------------------------------------
- * Portions Copyright © 2017 STMicroelectronics International N.V. All rights reserved.
- * Portions Copyright (c) 2013-2017 ARM Limited. All rights reserved.
- * --------------------------------------------------------------------------
+/*
+ * Copyright (c) 2013-2019 ARM Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,8 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * ----------------------------------------------------------------------
+ *
+ * $Date:        10. January 2017
+ * $Revision:    V2.1.0
+ *
  * Project:      CMSIS-RTOS API
- * Title:        cmsis_os.h header file
+ * Title:        cmsis_os.h FreeRTOS header file
  *
  * Version 0.02
  *    Initial Proposal Phase
@@ -120,11 +123,17 @@
 #ifndef CMSIS_OS_H_
 #define CMSIS_OS_H_
 
-#define osCMSIS             0x20001U    ///< API version (main[31:16].sub[15:0])
+#include "FreeRTOS.h"
+#include "task.h"
 
-#define osCMSIS_FreeRTOS    0xA0001U    ///< RTOS identification and version (main[31:16].sub[15:0])
+#define RTOS_ID_n             ((tskKERNEL_VERSION_MAJOR << 16) | (tskKERNEL_VERSION_MINOR))
+#define RTOS_ID_s             ("FreeRTOS " tskKERNEL_VERSION_NUMBER)
 
-#define osKernelSystemId    "FreeRTOS V10.0.1" ///< RTOS identification string
+#define osCMSIS               0x20001U  ///< API version (main[31:16].sub[15:0])
+
+#define osCMSIS_FreeRTOS      RTOS_ID_n ///< RTOS identification and version (main[31:16].sub[15:0])
+
+#define osKernelSystemId      RTOS_ID_s ///< RTOS identification string
 
 #define osFeature_MainThread  0         ///< main thread      1=main can be thread, 0=not available
 #define osFeature_Signals     24U       ///< maximum number of Signal Flags available per thread
@@ -144,7 +153,6 @@
 #endif
 
 #include "cmsis_os2.h"
-#include "FreeRTOS.h"
 
 #ifdef  __cplusplus
 extern "C"
@@ -422,14 +430,14 @@ uint32_t osKernelSysTick (void);
 /// Create a Thread Definition with function, priority, and stack requirements.
 /// \param         name          name of the thread function.
 /// \param         priority      initial priority of the thread function.
-/// \param         instances     number of possible thread instances (used to statically allocate memory).
+/// \param         instances     number of possible thread instances.
 /// \param         stacksz       stack size (in bytes) requirements for the thread function.
 #if defined (osObjectsExternal)  // object is external
 #define osThreadDef(name, priority, instances, stacksz) \
 extern const osThreadDef_t os_thread_def_##name
 #else                            // define the object
 #define osThreadDef(name, priority, instances, stacksz) \
-static uint32_t os_thread_stack##name[(stacksz)?(((stacksz+3)/4)):1]; \
+static uint64_t os_thread_stack##name[(stacksz)?(((stacksz+7)/8)):1]; \
 static StaticTask_t os_thread_cb_##name; \
 const osThreadDef_t os_thread_def_##name = \
 { (name), \
@@ -437,7 +445,7 @@ const osThreadDef_t os_thread_def_##name = \
     (instances == 1) ? (&os_thread_cb_##name) : NULL,\
     (instances == 1) ? sizeof(StaticTask_t) : 0U, \
     ((stacksz) && (instances == 1)) ? (&os_thread_stack##name) : NULL, \
-    4*((stacksz+3)/4), \
+    8*((stacksz+7)/8), \
     (priority), 0U, 0U } }
 #endif
 
@@ -690,7 +698,7 @@ extern const osPoolDef_t os_pool_def_##name
 #else                            // define the object
 #define osPoolDef(name, no, type) \
 const osPoolDef_t os_pool_def_##name = \
-{ (no), sizeof(type), NULL }
+{ (no), sizeof(type), {NULL} }
 #endif
 
 /// \brief Access a Memory Pool definition.
@@ -829,6 +837,7 @@ os_InRegs osEvent osMailGet (osMailQId queue_id, uint32_t millisec);
 osStatus osMailFree (osMailQId queue_id, void *mail);
 
 #endif  // Mail Queue available
+
 
 #ifdef  __cplusplus
 }

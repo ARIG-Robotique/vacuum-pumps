@@ -61,7 +61,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, STBY_2_Pin|PUMP_2_Pin|EV_3_Pin|STBY_3_Pin
                           |PUMP_3_Pin|EV_4_Pin|STBY_4_Pin|PUMP_4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PCPin PCPin */
+  /*Configure GPIO pins : TOR_3_Pin TOR_4_Pin */
   GPIO_InitStruct.Pin = TOR_3_Pin|TOR_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -72,9 +72,9 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin PAPin
-                           PAPin PAPin PAPin PAPin
-                           PAPin */
+  /*Configure GPIO pins : EV_1_Pin STBY_1_Pin PUMP_1_Pin EV_2_Pin
+                           PRES_4_Pin PRES_3_Pin PRES_2_Pin PRES_1_Pin
+                           HEART_BEAT_Pin */
   GPIO_InitStruct.Pin = EV_1_Pin|STBY_1_Pin|PUMP_1_Pin|EV_2_Pin
                           |PRES_4_Pin|PRES_3_Pin|PRES_2_Pin|PRES_1_Pin
                           |HEART_BEAT_Pin;
@@ -83,8 +83,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin PBPin PBPin */
+  /*Configure GPIO pins : STBY_2_Pin PUMP_2_Pin EV_3_Pin STBY_3_Pin
+                           PUMP_3_Pin EV_4_Pin STBY_4_Pin PUMP_4_Pin */
   GPIO_InitStruct.Pin = STBY_2_Pin|PUMP_2_Pin|EV_3_Pin|STBY_3_Pin
                           |PUMP_3_Pin|EV_4_Pin|STBY_4_Pin|PUMP_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -92,8 +92,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin */
+  /*Configure GPIO pins : B1_TEST_Pin I2C_ADD_2_Pin I2C_ADD_1_Pin TOR_1_Pin
+                           TOR_2_Pin */
   GPIO_InitStruct.Pin = B1_TEST_Pin|I2C_ADD_2_Pin|I2C_ADD_1_Pin|TOR_1_Pin
                           |TOR_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
