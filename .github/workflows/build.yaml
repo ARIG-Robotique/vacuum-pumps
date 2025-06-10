@@ -34,6 +34,11 @@ jobs:
       - name: Install ARM toolchain
         run: sudo apt-get install gcc-arm-none-eabi binutils-arm-none-eabi
 
+      - name: Install CMake
+        uses: ssrobins/install-cmake@v1
+        with:
+          version: 4.0.2
+
       - name: Build firmware
         id: build
         run: |
